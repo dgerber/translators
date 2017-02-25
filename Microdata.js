@@ -40,11 +40,11 @@ function extractMicrodata(doc, url) {
 	// https://bugzilla.mozilla.org/show_bug.cgi?id=909633
 	// Thus we use here out own scraping methods for
 	// microdata.
-	
+
 	// Helpful info: https://blog.scrapinghub.com/2014/06/18/extracting-schema-org-microdata-using-scrapy-selectors-and-xpath/
-	
+
 	var schemaItems = ZU.xpath(doc, '//*[@itemscope]');
-	
+
 	// Assign the itemid to each item first
 	var usedTypes = [];
 	for (var i=0; i<schemaItems.length; i++) {
@@ -56,7 +56,7 @@ function extractMicrodata(doc, url) {
 		}
 	}
 	Z.debug(usedTypes);
-	
+
 	function microdataValue(propertyNode) {
 		//see also https://www.w3.org/TR/microdata/#values
 		if (propertyNode.hasAttribute("itemscope")) {
@@ -99,14 +99,14 @@ function extractMicrodata(doc, url) {
 				return propertyNode.textContent;
 		}
 	}
-	
+
 	var statements = [];
-	
+
 	for (var i=0; i<schemaItems.length; i++) {
 		var refs = schemaItems[i].getAttribute("itemref");//Currently itemref are not handled
-		
+
 		var usedProperties = [];
-		
+
 		var typesList = schemaItems[i].getAttribute("itemtype");
 		if (typesList) {
 			var types = typesList.split(" ");
@@ -114,7 +114,7 @@ function extractMicrodata(doc, url) {
 				statements.push([schemaItems[i].itemid, "rdfs:type", types[k]]);
 			}
 		}
-		
+
 		//get all properties
 		var properties = ZU.xpath(schemaItems[i], './/*[@itemprop]');
 		var exclude = ZU.xpath(schemaItems[i], './/*[@itemscope]//*[@itemprop]');
@@ -130,14 +130,14 @@ function extractMicrodata(doc, url) {
 					//Z.debug(" - " + propertyNames[k] + ":" + propertyValue);
 
 					usedProperties[propertyNames[k]] = (usedProperties[propertyNames[k]]  ? usedProperties[propertyNames[k]]+1 : 1);
-					
+
 				}
 			}
 		}
 		Z.debug(typesList);
 		Z.debug(usedProperties);
 	}
-	
+
 	Z.debug(statements);
 }
 
@@ -145,7 +145,7 @@ function scrape(doc, url) {
 	var item = new Zotero.Item('newspaperArticle');
 	extractMicrodata(doc, url);
 	//continue here
-	
+
 	//item.complete();
 }
 
