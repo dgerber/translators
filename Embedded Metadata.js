@@ -349,9 +349,8 @@ function doWeb(doc, url) {
 	// globals do not seem to be isolated to individual translators, so
 	// RDF object, importantly the "itemDone" handlers, can get overridden
 	// by other translators, so we cannot reuse the RDF object from detectWeb
-	RDF = false;
-	if(!RDF) init(doc, url, function() { importRDF(doc, url) }, true);
-	else importRDF(doc, url);
+	// In any case, this resets the module/global(?) RDF
+	init(doc, url, function() { importRDF(doc, url) }, true);
 }
 
 //perform RDF import
