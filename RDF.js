@@ -1157,7 +1157,7 @@ function getNodes(skipCollections) {
 	return goodNodes;
 }
 
-function doImport() {
+function doImport(ask) {
 	Zotero.setProgress(null);
 	var nodes = getNodes();
 	if(!nodes.length) {
@@ -1165,47 +1165,52 @@ function doImport() {
 	}
 
 	// keep track of collections while we're looping through
-	var collections = new Array();
+	var collections = [],
+		items = []
 
-	for (var i=0; i<nodes.length; i++) {
-		var node = nodes[i];
-		// type
-		var type = Zotero.RDF.getTargets(node, rdf+"type");
-		if(type) {
-			type = Zotero.RDF.getResourceURI(type[0]);
+	nodes.forEach(function(node, i){
+		var type = Zotero.RDF.getTargets(node, rdf+"type")
+		if (type) {
+			type = Zotero.RDF.getResourceURI(type[0])
 
 			// skip if this is not an independent attachment,
 			if((type == n.z+"Attachment" || type == n.bib+"Memo") && isPart(node)) {
-				continue;
+				return
 			}
 
 			// skip collections until all the items are done
 			if(type == n.bib+"Collection" || type == n.z+"Collection") {
-				collections.push(node);
-				continue;
+				collections.push(node)
+				return
 			}
 		}
 
 		var newItem = new Zotero.Item();
 		newItem.itemID = Zotero.RDF.getResourceURI(node);
 
-		if(importItem(newItem, node)) {
-			newItem.complete();
-		}
+		if (importItem(newItem, node)) items.push(newItem)
 
 		Zotero.setProgress((i+1)/nodes.length*100);
+	})
+
+	if (ask && items.length){
+		const label = it => it.title + ' ['+it.itemType+']'
+		ask(items.map(label), function(selected){
+			for (const k in selected) items[k].complete()
+		})
+	} else {
+		items.forEach(it => it.complete())
 	}
 
 	/* COLLECTIONS */
-
-	for (var i=0; i<collections.length; i++) {
-		var collection = collections[i];
-		if(!Zotero.RDF.getArcsIn(collection)) {
+	collections.forEach(function(coll){
+		if(!Zotero.RDF.getArcsIn(coll)) {
 			var newCollection = new Zotero.Collection();
-			processCollection(collection, newCollection);
+			processCollection(coll, newCollection);
 			newCollection.complete();
 		}
-	}
+	})
+
 }
 
 /**
