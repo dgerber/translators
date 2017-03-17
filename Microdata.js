@@ -217,10 +217,13 @@ function askImportRDF(triples){
 	rdf.setTranslator("5e3ad958-ac79-463d-812b-a86a9235c28f")
 	rdf.getTranslatorObject(function(rdfObj) {
 		const rdfStore = rdfObj.Zotero.RDF
-		for (let t of triples) {
-			t = [ t[0].nominalValue, t[1].nominalValue,
-				  t[2].nominalValue, t[2].interfaceName=='Literal' ]
-			rdfStore.addStatement(...t)
+		// TMP FIX to smush http and https
+		// TODO: make this generic in RDF.js
+		const rep = x => x.interfaceName=='Literal' ? x.nominalValue
+				  : x.nominalValue.replace(/^https/, 'http')
+		for (const [s, p, o] of triples) {
+			rdfStore.addStatement(rep(s), rep(p), rep(o),
+								  o.interfaceName=='Literal')
 		}
 		Z.debug(rdfStore.serialize("rdf/n3"))
 		// TODO: smush RDF graph, at least according to so:sameAs relation
